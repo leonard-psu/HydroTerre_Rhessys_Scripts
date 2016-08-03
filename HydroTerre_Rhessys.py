@@ -10,13 +10,15 @@ import wget
 import sys
 
 #############################################################################################
-# Variables needed to run script
+# Function INPUTS 
 #
 # <ht_huc12_id> i.e. '020503030105'  USGS level 12 HUC identification
 # <ht_start_date> i.e. '2000-01-01'  Start date 
 # <ht_end_date> i.e. '2001-01-01'    End date
-# <output location> i.e. '/tmp' folder location to place zip file. Will also work with name specified. i.e. /tmp/ht.zip
+# <output location> i.e. '/tmp' folder location to place zip file
 #
+# Function OUTPUTS
+# <string> with USGS gages within HUC-12 (semi-colon separated)
 #############################################################################################
 
 def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_folder_location):
@@ -26,6 +28,7 @@ def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_f
         ###############################################################################################
         # Important variables
         url_result = ""
+        gage_result = ""
         check_interval=30
         taskUrl = "http://hydroterre.psu.edu:6080/arcgis/rest/services/RHESSys/HydroTerre_Rhessys/GPServer/HydroTerre_Rhessys"
 
@@ -69,7 +72,10 @@ def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_f
                                     resultResponse = urllib.urlopen(resultUrl, "f=json")   
                                     resultJson = json.loads(resultResponse.read())                            
                                     #print resultJson['value']
-                                    url_result = resultJson['value']
+                                    if paramName == 'Result_URL':
+                                        url_result = resultJson['value']
+                                    if paramName == 'usgs_gages':
+                                        gage_result = resultJson['value']
                                 #print resultsJson['Result_URL']
              
                             #print jobJson
@@ -96,7 +102,7 @@ def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_f
         print str(e)
         
 
-    return
+    return gage_result
 
 #############################################################################################
 #
@@ -106,6 +112,7 @@ ht_start_date = '2000-01-01'
 ht_end_date = '2001-01-01'
 output_folder_location = '/tmp/'
 
-get_HydroTerre_Data_Bundle(ht_huc12_id,ht_start_date,ht_end_date,output_folder_location)
+gage_result = get_HydroTerre_Data_Bundle(ht_huc12_id,ht_start_date,ht_end_date,output_folder_location)
+print "Gages in HUC: " + gage_result
 
 
