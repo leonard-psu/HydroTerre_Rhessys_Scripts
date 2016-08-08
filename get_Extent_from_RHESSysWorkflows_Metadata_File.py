@@ -42,8 +42,8 @@ def get_Extent_from_RHESSysWorkflows_Metadata_File(metadata_file_and_path):
                 split2 = split1[1].replace('\n','').split(' ')
                 #print split2
                 extent_min_x = split2[0]
-                extent_max_x = split2[1]
-                extent_min_y = split2[2]
+                extent_min_y = split2[1]
+                extent_max_x = split2[2]
                 extent_max_y = split2[3]
 
 
