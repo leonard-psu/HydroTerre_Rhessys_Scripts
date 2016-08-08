@@ -17,7 +17,7 @@ def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_f
 
     try:
         url_result = ""
-	check_interval=30
+        check_interval=30
 
         ###############################################################################################
         # Call HydroTerre Service
@@ -91,11 +91,18 @@ def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_f
     return
 
 ###############################################################################################
-ht_huc12_id = '020503030105'
-ht_start_date = '2000-01-01'
-ht_end_date = '2001-01-01'
-output_folder_location = '/tmp/hello.zip'
 
-get_HydroTerre_Data_Bundle(ht_huc12_id,ht_start_date,ht_end_date,output_folder_location)
+def main(argv):
 
+    ht_huc12_id = '020503030105'
+    ht_start_date = '2000-01-01'
+    ht_end_date = '2001-01-01'
+    output_folder_location = '/tmp/'
+
+    get_HydroTerre_Data_Bundle(ht_huc12_id,ht_start_date,ht_end_date,output_folder_location)
+
+###############################################################################################
+
+if __name__ == "__main__":
+    main(sys.argv)
 
