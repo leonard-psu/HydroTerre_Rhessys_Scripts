@@ -61,7 +61,8 @@ def get_HydroTerre_Data_Bundle(ht_huc12_id, ht_start_date, ht_end_date, output_f
                                     resultResponse = urllib.urlopen(resultUrl, "f=json")   
                                     resultJson = json.loads(resultResponse.read())                            
                                     #print resultJson['value']
-                                    url_result = resultJson['value']
+                                    if paramName == 'Result_URL':
+                                          url_result = resultJson['value']
                                 #print resultsJson['Result_URL']
              
                             #print jobJson
