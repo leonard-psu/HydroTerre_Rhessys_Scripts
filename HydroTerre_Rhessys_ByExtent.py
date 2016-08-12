@@ -101,12 +101,11 @@ def HydroTerre_RHESSys_ByExtent(extent_XMin, extent_YMin, extent_XMax, extent_YM
 
 def main(argv):
 
-    ## NOTE: ASSUMPTION is projection units in USA_Contiguous_Albers_Equal_Area_Conic_USGS_version
-
-    extent_XMin = '1636304.118'
-    extent_YMin = '1963764.027'
-    extent_XMax = '1637809.723'
-    extent_YMax = '1964829.119'
+    ## Uses GCS_WGS_1984 as input now provided by GetBoundingboxFromStudyareaShapefile
+    extent_XMin = '-76.769782' #'1636304.118'
+    extent_YMin = '39.273610'  #'1963764.027'
+    extent_XMax = '-76.717498' #'1637809.723'
+    extent_YMax = '39.326008'  #'1964829.119'
 
     ht_start_date = '2000-01-01'
     ht_end_date = '2001-01-01'
