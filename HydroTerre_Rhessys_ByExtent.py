@@ -101,6 +101,8 @@ def HydroTerre_RHESSys_ByExtent(extent_XMin, extent_YMin, extent_XMax, extent_YM
 
 def main(argv):
 
+    ## NOTE: ASSUMPTION is projection units in USA_Contiguous_Albers_Equal_Area_Conic_USGS_version
+
     extent_XMin = '1636304.118'
     extent_YMin = '1963764.027'
     extent_XMax = '1637809.723'
