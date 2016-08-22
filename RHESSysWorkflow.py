@@ -9,6 +9,7 @@ import zipfile
 import subprocess
 import logging
 import datetime
+import argparse
 
 ###############################################################################################
 ## RHESSysWorkflow
@@ -16,7 +17,7 @@ import datetime
 ## Version 0.1
 ## 
 ## The purpose of this workflow is to setup and execute a RHESSys hydrological model
-## using RHESSysWorkflows, HydroTerre, and USGS web services.
+## using RHESSysWorkflows, HydroTerre and USGS web services.
 ##
 ## By Lorne Leonard
 ## 
@@ -33,12 +34,8 @@ import datetime
 ## TODO LIST
 ##
 ## Add more options to control workflows
-## Better way to predict catchment area
-## Validate user inputs
-## Handle array of rasters for LAI
-## Create climate files using each raster cell
-## Fill climate base file with appropriate values
-## Climate base station data
+## Need better way to predict catchment area
+## Need to validate user inputs
 ## 
 ###############################################################################################
 
@@ -480,11 +477,13 @@ class RHESSysWorkflow(object):
             return -1
 
     ##TODO MORE OPTIONS
-    def RunCmd(self, sub_project_folder):
+    def RunCmd(self, sub_project_folder, addmonths):
         try:
             output_location = sub_project_folder + "/rhessys/tecfiles/tec_daily.txt"
-            #my_command = "RunCmd.py -p " + sub_project_folder + ' echo "2008 10 1 1 print_daily_on" > ' + output_location
-            my_command = "RunCmd.py -p " + sub_project_folder + ' echo \"' + str(self.model_start_year) + ' ' + str(self.model_start_month) + ' ' + str(self.model_start_day) + ' print_daily_on\" > ' + output_location
+            
+            #my_command = "RunCmd.py -p " + sub_project_folder + ' echo \"' + str(self.model_start_year) + ' ' + str(self.model_start_month + addmonths) + ' ' + str(self.model_start_day) + ' print_daily_on\" > ' + output_location
+            my_command = "RunCmd.py -p " + sub_project_folder + ' echo "2008 10 1 1 print_daily_on" > ' + output_location
+            #my_command = "RunCmd.py -p " + sub_project_folder + ' echo \"' + str(self.model_start_year) + ' ' + str(self.model_start_month) + ' ' + str(self.model_start_day) + ' print_daily_on\" > ' + output_location
             self.logger.info(my_command)
             output = subprocess.check_output(my_command, shell=True, stderr=subprocess.STDOUT)
             return output
@@ -509,6 +508,19 @@ class RHESSysWorkflow(object):
         except Exception,e:
             self.logger.error(str(e))
             return -1
+
+    def RHESSysPlot(self, sub_project_folder, obs_data):
+        try:
+            data = sub_project_folder + '/rhessys/output/test/rhessys_basin.daily'
+            my_command = "RHESSysPlot.py --plottype standard -o " + obs_data + " -d " + data + " -c streamflow --secondaryData " + data + ' --secondaryColumn precip --secondaryLabel "Rainfall (mm/day)" -t "DR5 streamflow" -l "Test simulation" -f test_plot --figureX 8 --figureY 3 -y "Streamflow (mm/day)" --color magenta'
+
+            self.logger.info(my_command)
+            output = subprocess.check_output(my_command, shell=True, stderr=subprocess.STDOUT, cwd=sub_project_folder)
+            return output
+        except Exception,e:
+            self.logger.error(str(e))
+            return -1
+
 
     ###############################################################################################
     ### Functions to execute HydroTerre Workflows
@@ -612,6 +624,12 @@ class RHESSysWorkflow(object):
             YMin = extent.min_y
             XMax = extent.max_x
             YMax = extent.max_y
+
+            #TODO
+            #XMin = '1636304.118'
+            #YMin = '1963764.027'
+            #XMax = '1637809.723'
+            #YMax = '1964829.119'
 
             ###############################################################################################
             # Call HydroTerre Service
@@ -919,7 +937,8 @@ class RHESSysWorkflow(object):
             self.logger.info(output)
 
             self.logger.info("RunCmd")
-            output = self.RunCmd(self.sub_project_folder)
+            addmonths = 9
+            output = self.RunCmd(self.sub_project_folder,addmonths)
             if output == -1:
                 sys.exit(-1026)
             self.logger.info(output)
@@ -930,8 +949,10 @@ class RHESSysWorkflow(object):
             #    sys.exit(-1027)
             self.logger.info(output)
 
-
-
+            self.logger.info("RHESSysPlot")
+            obs_data = '/projects/start_from_scratch/01589312/DR5_discharge_WY2008-2012.txt'
+            output = self.RHESSysPlot(self.sub_project_folder, obs_data)
+            self.logger.info(output)
 
             self.end_time = datetime.datetime.now()
             self.logger.info(self.end_time)
@@ -976,22 +997,23 @@ class RHESSysWorkflow(object):
 ###############################################################################################
 def main(argv):
 
-    project_location = '/tmp'
-    project_name = 'test14'
-    gageid = '01589312'
+    parser = argparse.ArgumentParser(description='Workflow to prepare and execute RHYESSys model')
+    parser.add_argument('-pl', '--project_location', default="/tmp", help='Base folder Location to store data and model results ', required=True)
+    parser.add_argument('-pn', '--project_name', default="test25", help='Name used to create data', required=True)
+    parser.add_argument('-g', '--gageid', default="01589312", help='USGS gage id', required=True)
+    parser.add_argument('-sd', '--start_date', default="2008-01-01", help='Climate start date', required=True)
+    parser.add_argument('-ed', '--end_date', default="2010-01-01", help='Climate end date', required=True)
+    parser.add_argument('-src', '--rhessys_source_location', default="/projects/rhessys", help='Location of RHESSys source code', required=True)
+    parser.add_argument('-pub', '--publisher', default="RHESSysWorkflow", help='Description for registering raster datasets', required=False)
+    args = parser.parse_args()
 
-    start_date = '2008-01-01'
-    end_date = '2010-01-01'
-    rhessys_source_location = '/projects/rhessys'
-    publisher = 'RHESSysWorkflow'
-
-    my_workflow = RHESSysWorkflow(project_location, project_name, gageid, start_date, end_date, rhessys_source_location, publisher)
+    my_workflow = RHESSysWorkflow(args.project_location, args.project_name, args.gageid, args.start_date, args.end_date, args.rhessys_source_location, args.publisher)
     print my_workflow
 
 
 ###############################################################################################
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main(sys.argv[1:])
 
 
