@@ -139,9 +139,9 @@ class RHESSysWorkflow(object):
 
         ######################################
         ## Create workflow
-        print("Start Executing workflow")
+        #print("Start Executing workflow")
         self.execute_workflow()
-        print("End Executing workflow")
+        #print("End Executing workflow")
 
 
 
@@ -159,7 +159,7 @@ class RHESSysWorkflow(object):
 
     def setup_log(self):
         log_file = self.output_folder_location + "/" + self.project_name + ".log"
-        print 'Log file location: ' + log_file
+        #print 'Log file location: ' + log_file
         self.logger = logging.getLogger("myApp")
         self.hdlr = logging.FileHandler(log_file)
         self.logger.addHandler(self.hdlr)
@@ -173,7 +173,6 @@ class RHESSysWorkflow(object):
             zfile.close()
         except Exception,e:
             print str(e)
-
 
 
     ###############################################################################################
@@ -481,9 +480,9 @@ class RHESSysWorkflow(object):
         try:
             output_location = sub_project_folder + "/rhessys/tecfiles/tec_daily.txt"
             
-            #my_command = "RunCmd.py -p " + sub_project_folder + ' echo \"' + str(self.model_start_year) + ' ' + str(self.model_start_month + addmonths) + ' ' + str(self.model_start_day) + ' print_daily_on\" > ' + output_location
-            my_command = "RunCmd.py -p " + sub_project_folder + ' echo "2008 10 1 1 print_daily_on" > ' + output_location
-            #my_command = "RunCmd.py -p " + sub_project_folder + ' echo \"' + str(self.model_start_year) + ' ' + str(self.model_start_month) + ' ' + str(self.model_start_day) + ' print_daily_on\" > ' + output_location
+            my_command = "RunCmd.py -p " + sub_project_folder + ' echo \"' + str(self.model_start_year) + ' ' + str(self.model_start_month + addmonths) + ' ' + str(self.model_start_day) + ' 1 print_daily_on\" > ' + output_location
+            #my_command = "RunCmd.py -p " + sub_project_folder + ' echo "2008 10 1 1 print_daily_on" > ' + output_location
+
             self.logger.info(my_command)
             output = subprocess.check_output(my_command, shell=True, stderr=subprocess.STDOUT)
             return output
@@ -657,7 +656,7 @@ class RHESSysWorkflow(object):
                 jobUrl = taskUrl + "/jobs/" + jobID            
                     
                 while status == "esriJobSubmitted" or status == "esriJobExecuting":
-                    print "checking to see if HydroTerre job is completed..."
+                    #print "checking to see if HydroTerre job is completed..."
                     time.sleep(check_interval)
                     
                     jobResponse = urllib.urlopen(jobUrl, "f=json")     
@@ -696,10 +695,10 @@ class RHESSysWorkflow(object):
             ###############################################################################################
             # Get HydroTerre Service Data Bundle
 
-            print '--------Download Start-------------'
-            print 'Retrieving result from: '+ url_result
+            #print '--------Download Start-------------'
+            #print 'Retrieving result from: '+ url_result
             wget.download(url_result, out=output_folder_location)
-            print '--------Download End-------------' 
+            #print '--------Download End-------------' 
             
             ###############################################################################################
             #print '--------Unzip Start-------------'
@@ -710,8 +709,8 @@ class RHESSysWorkflow(object):
             #print '--------Unzip End-------------'
 
             ###############################################################################################
-            print '--------HUC12 Area-------------'
-            print huc12areas + ' SQKM'
+            #print '--------HUC12 Area-------------'
+            #print huc12areas + ' SQKM'
             self.areaEstimate = huc12areas
 
 
@@ -722,12 +721,49 @@ class RHESSysWorkflow(object):
         return
 
     ###############################################################################################
+    # Print iterations progress
+    def printProgress (self, iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
+        """
+        Call in a loop to create terminal progress bar
+        @params:
+            iteration   - Required  : current iteration (Int)
+            total       - Required  : total iterations (Int)
+            prefix      - Optional  : prefix string (Str)
+            suffix      - Optional  : suffix string (Str)
+            decimals    - Optional  : positive number of decimals in percent complete (Int)
+            barLength   - Optional  : character length of bar (Int)
+        """
+        formatStr       = "{0:." + str(decimals) + "f}"
+        percents        = formatStr.format(100 * (iteration / float(total)))
+        filledLength    = int(round(barLength * iteration / float(total)))
+        bar             = '*' * filledLength + '-' * (barLength - filledLength)
+        sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+        sys.stdout.flush()
+        if iteration == total:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
+
+    ###############################################################################################
     ### EXECUTE
 
     def execute_workflow(self):
         try:
+ 
+
+            # make a list
+            items = list(range(0, 30))
+            i     = 0
+            l     = len(items)
+
+
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+
             self.start_time = datetime.datetime.now()
             self.logger.info(self.start_time)
+
+
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("get_NHDStreamflowGageIdentifiersAndLocation")
             output = self.get_NHDStreamflowGageIdentifiersAndLocation(self.sub_project_folder,self.gageid)
@@ -735,24 +771,32 @@ class RHESSysWorkflow(object):
                 sys.exit(-1001)
             self.logger.info(output)
 
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+
             self.logger.info("get_CatchmentShapefileForNHDStreamflowGage")
             output = self.get_CatchmentShapefileForNHDStreamflowGage(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1002)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("get_BoundingboxFromStudyareaShapefile")
             output = self.get_BoundingboxFromStudyareaShapefile(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1003)
             self.logger.info(output)
-
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+ 
             ## Now can get extent
             self.logger.info("get_Extent_from_RHESSysWorkflows_Metadata_File")
             self.extent = self.get_Extent_from_RHESSysWorkflows_Metadata_File()
             if self.extent == -1:
                 sys.exit(-1004)
-
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+ 
             ## Now get huc12 list count (threshold too big?)
             ##self.logger.info("get_Extent_from_RHESSysWorkflows_Metadata_File")
             ##self.huc_list_as_string = self.get_HUC12_IDs_from_RhyessSys_Domain(self.extent)
@@ -765,13 +809,17 @@ class RHESSysWorkflow(object):
             self.logger.info("get_Extent_from_RHESSysWorkflows_Metadata_File")
             output = self.HydroTerre_RHESSys_ByExtent(self.extent, self.ht_start_date, self.ht_end_date, self.sub_project_folder)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
-            print '--------Unzip Start-------------'
+            #print '--------Unzip Start-------------'
             zipfolder = self.sub_project_folder + '/RHESSys_ETV'
             self.create_path(zipfolder)
             zipfilepathname = self.sub_project_folder + '/RHESSys_ETV_Data.zip'
             self.unzip_etv_zip_file_at_path(zipfilepathname, zipfolder)
-            print '--------Unzip End-------------'
+            #print '--------Unzip End-------------'
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 ##TODO ERROR MESSAGE -> NEED TO RETURN MEANINGFUL MESSAGES FROM SERVICE. i.e. return message when too many huc12s
 
@@ -781,19 +829,25 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1005)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("get_USGSNLCDForDEMExtent")
             output = self.get_USGSNLCDForDEMExtent(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1006)
             self.logger.info(output)
-
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+ 
  
             self.logger.info("get_SSURGOFeaturesForBoundingbox")
             output = self.get_SSURGOFeaturesForBoundingbox(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1007)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 
             self.logger.info("GenerateSoilPropertyRastersFromSSURGO")
@@ -801,6 +855,8 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1008)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 
             #TODO
@@ -815,13 +871,17 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1009)
             self.logger.info(output)
-
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+ 
             self.logger.info("CreateGRASSLocationFromDEM")
             #Beware of quotes
             output = self.CreateGRASSLocationFromDEM(self.sub_project_folder, '"RHESSys model for Dead Run 5 watershed near Catonsville, MD"')
             if output == -1:
                 sys.exit(-1010)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 #TODO CHECK SOURCE PATH IS VALID
             self.logger.info("ImportRHESSysSource")
@@ -829,6 +889,8 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1011)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 
 ##NOTE ASSUMPTION ABOUT PATH
@@ -841,6 +903,8 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1012)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 
 ##NOTE ASSUMPTION ABOUT PATH
@@ -865,6 +929,8 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1014)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 
 ##TODO Other Options
@@ -873,30 +939,40 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1015)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("GenerateSoilTextureMap")
             output = self.GenerateSoilTextureMap(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1016)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("ImportRasterMapIntoGRASS_LAI")
             output = self.ImportRasterMapIntoGRASS_LAI(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1017)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("ImportRasterMapIntoGRASS_LANDCOVER")
             output = self.ImportRasterMapIntoGRASS_LANDCOVER(self.sub_project_folder)
             #if output == -1:
             #    sys.exit(-1018)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("ImportRasterMapIntoGRASS_LANDCOVER")
             output = self.ImportRasterMapIntoGRASS_LANDCOVER(self.sub_project_folder)
             #if output == -1:
             #    sys.exit(-1019)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 
             self.logger.info("RegisterLandcoverReclassRules")
@@ -904,12 +980,16 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1020)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("GenerateLandcoverMaps")
             output = self.GenerateLandcoverMaps(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1021)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
 #TODO VARIABLE NAMES
             self.logger.info("GenerateWorldTemplate")
@@ -917,24 +997,32 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1022)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("CreateWorldfile")
             output = self.CreateWorldfile(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1023)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("CreateFlowtable")
             output = self.CreateFlowtable(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1024)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("RunLAIRead")
             output = self.RunLAIRead(self.sub_project_folder)
             if output == -1:
                 sys.exit(-1025)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("RunCmd")
             addmonths = 9
@@ -942,21 +1030,30 @@ class RHESSysWorkflow(object):
             if output == -1:
                 sys.exit(-1026)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("RunModel")
             output = self.RunModel(self.sub_project_folder)
             #if output == -1:
             #    sys.exit(-1027)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.logger.info("RHESSysPlot")
             obs_data = '/projects/start_from_scratch/01589312/DR5_discharge_WY2008-2012.txt'
             output = self.RHESSysPlot(self.sub_project_folder, obs_data)
             self.logger.info(output)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
             self.end_time = datetime.datetime.now()
             self.logger.info(self.end_time)
+            i += 1
+            self.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
 
+            #print('i = ' + str(i))
             self.timespan = self.end_time - self.start_time
             self.logger.info("Workflow took: " + self.timespan)
  
@@ -978,8 +1075,18 @@ class RHESSysWorkflow(object):
 
         result += "-- PROPERTIES ------------------------------------------------------------\n"
         result += "Project Extent" + str(self.extent) + "\n"
-        result += "HUC-12 Count = " + str(self.huc_list_count) + "\n"
+        #result += "HUC-12 Count = " + str(self.huc_list_count) + "\n"
         result += "HUC-12 AREA = " + str(self.areaEstimate) + "\n"
+
+        result += "-- OUTPUTS ------------------------------------------------------------\n"
+        result += "Log File = " + str(self.get_Metadata_filename()) + "\n"
+        fname = self.sub_project_folder + '/standard_test_plot.png'
+        if os.path.isfile(fname):
+            result += "Plot File = " + fname + "\n"
+        else:
+            result += "No Plot File! Check model run.\n"
+           
+
 
         result += "-- TIME------------------------------------------------------------\n"
         result += "Workflow Start time = " + str(self.start_time) + "\n"
@@ -1007,7 +1114,27 @@ def main(argv):
     parser.add_argument('-pub', '--publisher', default="RHESSysWorkflow", help='Description for registering raster datasets', required=False)
     args = parser.parse_args()
 
+
+    #print args.project_location
+    #print args.project_name
+    #print args.gageid
+    #print args.start_date
+    #print args.end_date
+    #print args.rhessys_source_location
+    #print args.publisher
+
+
+    #project_location = '/tmp'
+    #project_name = 'test18'
+    #gageid = '01589312'
+    #start_date = '2008-01-01'
+    #end_date = '2010-01-01'
+    #rhessys_source_location = '/projects/rhessys'
+    #publisher = 'RHESSysWorkflow'
+
     my_workflow = RHESSysWorkflow(args.project_location, args.project_name, args.gageid, args.start_date, args.end_date, args.rhessys_source_location, args.publisher)
+
+    #print my_workflow.get_Metadata_filename()
     print my_workflow
 
 
